@@ -420,4 +420,61 @@ from purchase
 
 
 /*SQL - Merge Data sets.
-Joining tables needs a key as bridge but the key needs to be a unique value.*/
+Joining tables needs a key as bridge but the key needs to be a unique value.
+Matching condition: on. A match is found if idA in A equals to idB in B.
+prohibit variables have the same name in one dataset. It is allowed in different dateset.*/
+
+/*Left join: 
+A left join B means that keep every record in A and want variable in B supplment A.*/
+
+
+proc import datafile= "&folder_loc.SQL demonstration.xlsx" 
+dbms=xlsx
+out=dataA
+replace;
+sheet = 'a';
+getnames=yes;
+run;
+
+proc import datafile= "&folder_loc.SQL demonstration.xlsx" 
+dbms=xlsx
+out=dataB
+replace;
+sheet = 'b';
+getnames=yes;
+run;
+
+/*Left Join*/
+proc sql;
+select *
+from dataA
+left join dataB
+on dataA.aID = dataB.bID
+;quit;
+
+proc sql;
+select *
+from dataB
+left join dataA
+on dataA.aID = dataB.bID
+;quit;
+
+proc sql;
+select *
+from purchase
+left join customer
+on dataA.aID = dataB.bID
+;quit;
+
+
+proc sql;
+create table merged as 
+select purchase.ItemID, purchase.item, customer.area
+from purchase
+left join customer
+on purchase.customer_name = customer.customer_name
+;quit;
+
+proc export data= merged outfile= "&folder_loc.Tali.xlsx" dbms=xlsx;
+run;
+
