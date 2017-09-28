@@ -595,3 +595,22 @@ run;
 proc contents data=rent;
 run;
 
+
+/* Macros are programs that make programs. 
+It patch a bunch of programs and saves a lot of time. */
+/* %do %if */
+/* %macro  */
+/* %mend */
+/* %put  */
+/* %let */
+/* %xxxxxx */
+
+/* %pr(din=commrent,n=15) */
+/* proc print data = commrent (0bs=10); */
+/*  */
+/* %summary(din=commrent) */
+/*  */
+/* %winsorize(din=commrent, dou=test,var=age) */
+
+proc sql;
+select 
