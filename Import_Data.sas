@@ -612,5 +612,80 @@ It patch a bunch of programs and saves a lot of time. */
 /*  */
 /* %winsorize(din=commrent, dou=test,var=age) */
 
-proc sql;
-select 
+
+/*Scatter plot.*/
+
+data crent;
+ set commrent;
+run;
+
+/*procedure makes plot*/
+proc gplot data=crent;
+/*symbol: is used for each data point.
+  interpol: thing between data points.
+  value: symbol represents data points.
+  h: height of symbol.*/
+symbol interpol=none value=dot h=1;
+/*plot y*x;*/
+plot vacancy_rates*SQfootage;
+run;
+
+/*Series plot is just a scatter plot with connection between points*/
+proc sort data= crent;
+by SQfootage;
+run;
+
+proc gplot data=crent;
+title '';
+/*symbol: is used for each data point.
+  interpol: thing between data points.
+           join two consecutive points, order matters. 
+  value: symbol represents data points.
+  h: height of symbol.*/
+symbol interpol=join value=dot h=1;
+/*plot y*x;*/
+plot vacancy_rates*SQfootage;
+run;
+
+
+/*bar plot and pie plot are one variable*/
+/*x-xais value of variable.*/
+/*y- frequency of the values.*/
+
+proc gchart data=commrent;
+/*vertical bar*/
+vbar age;
+run;
+/*not all the age show up. Some age aggregated to the closet value.*/
+
+/*not aggreted.*/
+proc gchart data=commrent;
+/*vertical bar*/
+vbar age/discrete;
+run;
+
+/*horizontal bar.*/
+proc gchart data=commrent;
+/*vertical bar*/
+hbar age/discrete;
+run;
+
+/*pie plot*/
+proc gchart data=commrent;
+/*vertical bar*/
+pie age/discrete;
+run;
+
+/*Multiple plots and legends.*/
+proc sort data=commrent; by age; run;
+
+/*legend represents what line represents what reletionship.*/
+
+legend1 label=("Plot legend")
+;
+
+proc gplot data=commrent;
+symbol ininterpol=join value=dot height=1;
+plot vacancy_rates*age operating_expenses*age / overlay legend=legend1;
+run;
+
