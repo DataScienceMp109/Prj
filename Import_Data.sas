@@ -478,3 +478,120 @@ on purchase.customer_name = customer.customer_name
 proc export data= merged outfile= "&folder_loc.Tali.xlsx" dbms=xlsx;
 run;
 
+* import the datasets;
+PROC IMPORT OUT=customer DATAFILE="&folder_loc.customers.xlsx" DBMS=xlsx replace;
+GETNAMES=YES;
+RUN;
+PROC IMPORT OUT=product DATAFILE="&folder_loc.products.xlsx" DBMS=xlsx replace;
+GETNAMES=YES;
+RUN;
+PROC IMPORT OUT=sale DATAFILE="&folder_loc.sales.xlsx" DBMS=xlsx replace;
+GETNAMES=YES;
+RUN;
+PROC IMPORT OUT=return DATAFILE="&folder_loc.returns.xlsx" DBMS=xlsx replace;
+GETNAMES=YES;
+RUN;
+
+* merge them into one table;
+proc sql;
+create table mg as
+select a.*, b.*, c.*
+from sale as a
+left join customer as b
+on a.customer_id=b.id
+left join product as c
+on a.product_id=c.id
+;quit;
+
+* how much sale for each customer.;
+proc sql;
+create table percus as
+select customer_name, sum(profit) as profit
+from mg
+group by customer_name
+order by profit descending
+;quit;
+
+* region distribution;
+proc sql;
+create table prosale as 
+select province, sum(Sales) as sale
+from mg
+group by province
+;quit;
+ 
+* region proportion;
+proc sql;
+create table propct as
+select province, sale, sale/sum(sale) as pct
+from prosale
+;quit;
+
+*pie plot;
+proc gchart data=mg;
+pie province / discrete
+sumvar== sales;
+run;
+
+
+*concentration;
+proc sql;
+create table herfin as
+select customer_name, sum(profit) as profit
+from mg
+group by customer_name
+;quit;
+ 
+ proc sql;
+create table herfin_pct as
+select *, profit/sum(profit) as pct
+from herfin
+;quit;
+
+/* The result shows the concentration level is very solid to customers change. */
+proc sql;
+select sum(pct*pct) as Herfindal, 1/count(*) as benchmark
+from herfin_pct
+;quit;
+
+/*SAS library.*/
+
+* highest return rate product;
+proc sql;
+create table mgreturn as
+select a.*,b.product_name 
+from return as a
+left join mg as b
+on a.order_id=b.order_id
+;quit;
+
+PROC PRINT DATA=mgreturn(OBS=10);RUN;
+* group up by product;
+proc sql;
+create table groupreturn as
+select product_name, count(*) as returns
+from mgreturn
+group by product_name
+order by returns descending
+;quit;
+ 
+PROC PRINT DATA=groupreturn(OBS=10);RUN;
+
+
+/* correlation */
+proc corr data=commrent;
+run;
+
+proc corr data=commrent;
+var age rental_rates;
+run;
+
+/*Descriptive stats.*/
+proc means data=rent mean median std p5 p95 min max;
+var rent year;
+run;
+
+/*preview a dataset*/
+proc contents data=rent;
+run;
+
