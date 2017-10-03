@@ -596,8 +596,7 @@ proc contents data=rent;
 run;
 
 
-/* Macros are programs that make programs. 
-It patch a bunch of programs and saves a lot of time. */
+/* Macros are programs that make programs. */
 /* %do %if */
 /* %macro  */
 /* %mend */
@@ -605,87 +604,89 @@ It patch a bunch of programs and saves a lot of time. */
 /* %let */
 /* %xxxxxx */
 
-/* %pr(din=commrent,n=15) */
-/* proc print data = commrent (0bs=10); */
-/*  */
-/* %summary(din=commrent) */
-/*  */
-/* %winsorize(din=commrent, dou=test,var=age) */
+/*Macro variable.*/
+%let a=1;
+%let me = heng;
+%let you= best friend;
+%let ex=aswhole;
+
+%put it is a sunny day;
+%put &a.;
+%put &you.;
+
+/* macro variables.name of dataset, name of variables.  */
 
 
-/*Scatter plot.*/
+%let d=commrent;
+proc print data =  &d.(obs=10);run;
+proc means data=&d.;run;
+proc corr data=&d.;run;
 
-data crent;
- set commrent;
+%let ind=age operating_expenses vacancy_rates SQfootage;
+
+proc reg data=commrent;
+model rental_rates=&ind.;
+run; 
+
+proc corr data=commrent;
+var rental_rates &ind.;
 run;
 
-/*procedure makes plot*/
-proc gplot data=crent;
-/*symbol: is used for each data point.
-  interpol: thing between data points.
-  value: symbol represents data points.
-  h: height of symbol.*/
-symbol interpol=none value=dot h=1;
-/*plot y*x;*/
-plot vacancy_rates*SQfootage;
+/* macro function. */
+/* macro function saves you for typing the whole procedure. */
+
+
+%macro foobar (params);
+/* do something here; */
+%mend foobar;
+
+%macro myfunc(data=,n=10);
+/* a equal sign after each of parameters. */
+/* refer to the value, put & ahead. */
+
+%mend myfunc;
+
+%myfunc(data=proj,n=100);
+
+%myfunc(data=proj);
+
+
+
+/* Case study one */
+proc import out = baseball datafile="&folder_loc.baseball.xlsx"
+dbms=xlsx replace;
+getnames=yes;
 run;
 
-/*Series plot is just a scatter plot with connection between points*/
-proc sort data= crent;
-by SQfootage;
+/* view distribution of data */
+proc means data=baseball;run;
+
+/* the top 5 home run players in 1986; */
+proc sort data=baseball; by descending nhome;run;
+proc print data=baseball(obs=5);run;
+
+/* the top 5 paid players in 1986 */
+proc sort data=baseball; by descending salary;run;
+proc print data=baseball(obs=5);run;
+
+/* the impact of home runs on salary; */
+proc reg data=baseball;
+model salary = nhome;
 run;
 
-proc gplot data=crent;
-title '';
-/*symbol: is used for each data point.
-  interpol: thing between data points.
-           join two consecutive points, order matters. 
-  value: symbol represents data points.
-  h: height of symbol.*/
-symbol interpol=join value=dot h=1;
-/*plot y*x;*/
-plot vacancy_rates*SQfootage;
+/* add more variables */
+proc reg data=baseball;
+MODEL salary = nHome nHits nRuns nAtBat nRBI nBB nOuts nError;
+RUN;
+
+* calculate performance score;
+DATA score;
+SET baseball;
+ps= 3*nHome + 0.5*nHits + 1*nRuns +1* nAtBat 
+    - 1*nRBI + 0.3*nBB + 2*nOuts - 1*nError;
+RUN;
+
+/* regression ps on salary */
+proc reg data=score;
+model salary = ps;
 run;
-
-
-/*bar plot and pie plot are one variable*/
-/*x-xais value of variable.*/
-/*y- frequency of the values.*/
-
-proc gchart data=commrent;
-/*vertical bar*/
-vbar age;
-run;
-/*not all the age show up. Some age aggregated to the closet value.*/
-
-/*not aggreted.*/
-proc gchart data=commrent;
-/*vertical bar*/
-vbar age/discrete;
-run;
-
-/*horizontal bar.*/
-proc gchart data=commrent;
-/*vertical bar*/
-hbar age/discrete;
-run;
-
-/*pie plot*/
-proc gchart data=commrent;
-/*vertical bar*/
-pie age/discrete;
-run;
-
-/*Multiple plots and legends.*/
-proc sort data=commrent; by age; run;
-
-/*legend represents what line represents what reletionship.*/
-
-legend1 label=("Plot legend")
-;
-
-proc gplot data=commrent;
-symbol ininterpol=join value=dot height=1;
-plot vacancy_rates*age operating_expenses*age / overlay legend=legend1;
-run;
-
