@@ -690,3 +690,37 @@ RUN;
 proc reg data=score;
 model salary = ps;
 run;
+
+
+/* case study 2 */
+PROC IMPORT OUT=car DATAFILE="&folder_loc.cars.xlsx" DBMS=XLSX;
+GETNAMES=YES;
+RUN;
+ 
+PROC CORR DATA=car;RUN;
+ 
+* determinants of horse power;
+/* multi-linearity heaveily damage parameter estimate.  */
+PROC REG DATA=car;
+MODEL horsepower=cylinders enginesize/ VIF;
+RUN;
+
+PROC REG DATA=car;
+MODEL horsepower=cylinders/ VIF;
+RUN;
+
+* determinants of MPG;
+PROC REG DATA=car;
+MODEL MPG_city = cylinders weight wheelbase length / VIF;
+RUN;
+ 
+* determinants of price;
+PROC REG DATA=car;
+MODEL MSRP = horsepower MPG_city / VIF;
+RUN;
+
+* brand premium;
+PROC GLM DATA=car;
+CLASS make;
+MODEL MSRP = horsepower MPG_city make / noint solution;
+RUN;
